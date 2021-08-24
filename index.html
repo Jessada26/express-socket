@@ -8,23 +8,56 @@
 </head>
 <body>
     <h1>Express Socket chat room</h1>
-    <h2>Hello <label id='Name'></label> </h2>
+    <h2>Hello <label id='Name'>Anonymous</label> </h2>
     <form onsubmit="onSubmit(event)" name='change' >   
         <label ><b>Change your first name</b></label>
         <input  name="first" type="text"></p>
         <button>Change</button></p>
       </form>
+      <div id="show"></div>
+      <div id="info"></div>
+      <form onsubmit="onSubmitTwo(event)" name='send' >   
+        <label ><b>your massage</b></label>
+        <input onkeypress="typingChange(event)"  name="message" type="text"></p>
+        <button>Send</button></p>
+      </form>   
     
 </body>
 </html>
 
 <script src="https://cdn.socket.io/3.1.3/socket.io.min.js" integrity="sha384-cPwlPLvBTa3sKAgddT6krw0cJat7egBga3DJepJyrLl4Q9/5WLra3rrnMcyTyOnh" crossorigin="anonymous"></script>
 <script>
+      const socket = io.connect('http://localhost:3000');
+
      const onSubmit =(e)=>{
         e.preventDefault()
         document.getElementById("Name").innerText=e.target.querySelector("input[name='first']").value;
-        console.log(e.target.querySelector("input[name='first']").value)
+        socket.emit('change_username', { username: e.target.querySelector("input[name='first']").value })
+        e.target.querySelector("input[name='first']").value=""
+     
+      }
+
+      const onSubmitTwo =(e)=>{
+        e.preventDefault()
+        socket.emit('new_message', { message: e.target.querySelector("input[name='message']").value })
+        e.target.querySelector("input[name='message']").value=""
+      }
+
+      socket.on('receive_message', data=>{
+        console.log(data)
+        let Item = document.createElement('li')
+        Item.textContent = data.username + ": " + data.message;
+        document.getElementById('show').appendChild(Item)
+      })
+
+     const typingChange =(e)=>{
+         socket.emit('typing')
+     
      }
 
-    const socket = io.connect('http://localhost:3000');
+     socket.on('typing', data=> {
+          document.getElementById('info').textContent=data.username + " กำลังพิทพ์..."
+          setTimeout(()=> {document.getElementById('info').textContent=""},1500)
+      })
+  
   </script>
